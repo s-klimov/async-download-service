@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  dev:
+    build: .
+    command: poetry run python server.py --level debug --debug
+    env_file:
+      - .env
+    environment:
+      PHOTOS_DIR: $PHOTOS_DIR
+    volumes:
+      - .:/app/
+      - media_volume:/app/${PHOTOS_DIR}
+    ports:
+      - 8080:8080
+    container_name: archive-service-dev
+
+volumes:
+  media_volume:
