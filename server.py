@@ -68,7 +68,7 @@ async def archive(request: Request) -> web.StreamResponse:
     signal.signal(signal.SIGINT, handler)
 
     try:
-        while True:
+        while not proc.stdout.at_eof():
             logger.debug("Sending archive chunk ...")
             archive_data = await proc.stdout.read(BATCH_SIZE)
 
@@ -77,12 +77,14 @@ async def archive(request: Request) -> web.StreamResponse:
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
 
-            if proc.stdout.at_eof():
-                logger.info("archive file successfully downloaded")
-                break
-
-    except (ConnectionResetError, ProcessLookupError, IndexError, KeyboardInterrupt) as e:
+    except Exception as e:  # Обрабатываем любые исключения
         proc.terminate()
+
+        # если процесс не завершился, то принудительно его "убиваем"
+        # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.returncode
+        if proc.returncode is None:
+            proc.kill()
+
         logger.error("Download was interrupted " + str(e))
 
     return response
@@ -101,7 +103,7 @@ def get_args() -> [str, bool]:
     parser = argparse.ArgumentParser(description='Сервер архивирования медиа-файлов')
     parser.add_argument('-l', '--level', nargs='?', choices=['debug', 'info', 'warning', 'error'], default='info',
                         help='уровень логирования в консоль (default: %(default)s)')
-    parser.add_argument('-d', '--debug', action='store_true',
+    parser.add_argument('-d', '--delay', action='store_true',
                         help='включить задержку ответа')
     args = parser.parse_args()
     return args.level, args.debug
