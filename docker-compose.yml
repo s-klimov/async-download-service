@@ -3,7 +3,7 @@ version: '3.7'
 services:
   dev:
     build: .
-    command: poetry run python server.py --level debug --debug
+    command: poetry run python server.py --level debug --delay
     env_file:
       - .env
     environment:
