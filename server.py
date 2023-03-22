@@ -106,15 +106,15 @@ def get_args() -> [str, bool]:
     parser.add_argument('-d', '--delay', action='store_true',
                         help='включить задержку ответа')
     args = parser.parse_args()
-    return args.level, args.debug
+    return args.level, args.delay
 
 
 if __name__ == '__main__':
 
-    logger_level, debug = get_args()
+    logger_level, delay = get_args()
 
     logger.setLevel(getattr(logging, logger_level.upper()))
-    app = web.Application(debug=debug)
+    app = web.Application(debug=delay)
     app.add_routes([
         web.get('/', handle_index_page),
         web.get('/archive/{archive_hash}/', archive),
