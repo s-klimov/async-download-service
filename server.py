@@ -33,7 +33,7 @@ def handler(signum, frame):
     res = input("Ctrl-c нажат. Действительно прервать процесс архивации? y/n ").strip()
     if res == 'y':
         logger.info('Процесс архивации прекращен пользователем')
-        raise KeyboardInterrupt()
+        raise KeyboardInterrupt
 
 
 async def archive(request: Request) -> web.StreamResponse:
@@ -55,7 +55,7 @@ async def archive(request: Request) -> web.StreamResponse:
         }
     )
 
-    proc = await asyncio.create_subprocess_exec(
+    process = await asyncio.create_subprocess_exec(
         'zip',
         '-r', '-', '.',  # забираем в архив все файлы и папки из директории, указанной в cwd
         stdout=asyncio.subprocess.PIPE,
@@ -68,24 +68,23 @@ async def archive(request: Request) -> web.StreamResponse:
     signal.signal(signal.SIGINT, handler)
 
     try:
-        while not proc.stdout.at_eof():
+        while not process.stdout.at_eof():
             logger.debug("Sending archive chunk ...")
-            archive_data = await proc.stdout.read(BATCH_SIZE)
+            archive_data = await process.stdout.read(BATCH_SIZE)
 
             await response.write(archive_data)
 
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
 
-    except Exception as e:  # Обрабатываем любые исключения
-        proc.terminate()
-
+    except (Exception, KeyboardInterrupt, SystemExit) as e:  # Обрабатываем любые исключения
+        logger.error("Download was interrupted " + str(e))
+    finally:
         # если процесс не завершился, то принудительно его "убиваем"
         # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.returncode
-        if proc.returncode is None:
-            proc.kill()
-
-        logger.error("Download was interrupted " + str(e))
+        if process.returncode is None:
+            process.kill()
+            await process.communicate()
 
     return response
 
