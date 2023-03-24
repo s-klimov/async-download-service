@@ -73,15 +73,18 @@ async def archive(request: Request) -> web.StreamResponse:
             archive_data = await process.stdout.read(BATCH_SIZE)
 
             await response.write(archive_data)
-
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
 
-    except (Exception, KeyboardInterrupt, SystemExit) as e:  # Обрабатываем любые исключения
-        logger.error("Download was interrupted " + str(e))
+    except asyncio.CancelledError:
+        logger.error("Download was interrupted ")
+
+        # отпускаем перехваченный CancelledError
+        raise
     finally:
         # если процесс не завершился, то принудительно его "убиваем"
         # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.returncode
+        logger.info("Terminate zip process")
         if process.returncode is None:
             process.kill()
             await process.communicate()
