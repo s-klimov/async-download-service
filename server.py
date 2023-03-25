@@ -66,7 +66,6 @@ async def archive(request: Request) -> web.StreamResponse:
 
     # Отправляет клиенту HTTP заголовки
     await response.prepare(request)
-    signal.signal(signal.SIGINT, handler)
 
     try:
         while not process.stdout.at_eof():
@@ -76,6 +75,7 @@ async def archive(request: Request) -> web.StreamResponse:
             await response.write(archive_data)
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
+            signal.signal(signal.SIGINT, handler)
 
     except asyncio.CancelledError:
         logger.error("Download was interrupted ")
