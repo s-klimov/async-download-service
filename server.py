@@ -30,8 +30,9 @@ logger = logging.getLogger(APP_NAME)
 def handler(signum, frame):
     """Хендлер прерывания процесса архивации"""
     print('Signal handler called with signal', signum)
-    res = input("Ctrl-c нажат. Действительно прервать процесс архивации? y/n ").strip()
-    if res == 'y':
+    pressed_key = input("Ctrl-c нажат. Внимание, текущие процессы архивации остановятся. "
+                        "Действительно остановить сервис? y/n ").strip()
+    if pressed_key == 'y':
         logger.info('Процесс архивации прекращен пользователем')
         raise KeyboardInterrupt
 
