@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(APP_NAME)
 
 
-def handler(signum, frame):
+def keyboard_interrupt_handler(signum, frame):
     """Хендлер прерывания процесса архивации"""
     print('Signal handler called with signal', signum)
     pressed_key = input("Ctrl-c нажат. Внимание, текущие процессы архивации остановятся. "
@@ -75,7 +75,7 @@ async def archive(request: Request) -> web.StreamResponse:
             await response.write(archive_data)
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
-            signal.signal(signal.SIGINT, handler)
+            signal.signal(signal.SIGINT, keyboard_interrupt_handler)
 
     except asyncio.CancelledError:
         logger.error("Download was interrupted ")
