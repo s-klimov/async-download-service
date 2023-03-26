@@ -62,7 +62,7 @@ async def archive(request: Request) -> web.StreamResponse:
             archive_data = await process.stdout.read(BATCH_SIZE)
 
             await response.write(archive_data)
-            if request.app.debug:
+            if request.app['delay']:
                 await asyncio.sleep(INTERVAL_SEC)
 
     except asyncio.CancelledError:
@@ -105,7 +105,8 @@ if __name__ == '__main__':
     logger_level, delay = get_args()
 
     logger.setLevel(getattr(logging, logger_level.upper()))
-    app = web.Application(debug=delay)
+    app = web.Application()
+    app['delay'] = delay
     app.add_routes([
         web.get('/', handle_index_page),
         web.get('/archive/{archive_hash}/', archive),
