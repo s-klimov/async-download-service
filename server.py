@@ -1,7 +1,6 @@
 import logging
 import os
 import os.path
-import signal
 import sys
 
 import aiofiles
@@ -25,16 +24,6 @@ logging.basicConfig(
     stream=sys.stdout
 )
 logger = logging.getLogger(APP_NAME)
-
-
-def keyboard_interrupt_handler(signum, frame):
-    """Хендлер прерывания процесса архивации"""
-    print('Signal handler called with signal', signum)
-    pressed_key = input("Ctrl-c нажат. Внимание, текущие процессы архивации остановятся. "
-                        "Действительно остановить сервис? y/n ").strip()
-    if pressed_key == 'y':
-        logger.info('Процесс архивации прекращен пользователем')
-        raise KeyboardInterrupt
 
 
 async def archive(request: Request) -> web.StreamResponse:
@@ -75,7 +64,6 @@ async def archive(request: Request) -> web.StreamResponse:
             await response.write(archive_data)
             if request.app.debug:
                 await asyncio.sleep(INTERVAL_SEC)
-            signal.signal(signal.SIGINT, keyboard_interrupt_handler)
 
     except asyncio.CancelledError:
         logger.error("Download was interrupted ")
