@@ -3,6 +3,7 @@ import os
 import os.path
 import signal
 import sys
+from aiohttp import StreamReader
 
 import aiofiles
 import argparse
@@ -92,6 +93,21 @@ async def archive(request: Request) -> web.StreamResponse:
     return response
 
 
+async def save_archive(request: Request) -> web.Response:
+    """Хендлер сохранения тела запроса в файл"""
+
+    logger.info(request.headers)
+
+    # FIXME исправить код чтения байтов из потока и добавить код сохранения файла
+    # https://github.com/aio-libs/aiohttp-demos
+    stream = StreamReader()
+
+    data, last_chunk = stream.readchunk()
+    logger.info(data)
+
+    return web.Response()
+
+
 async def handle_index_page(request):
     """Главная страница проекта"""
 
@@ -120,5 +136,6 @@ if __name__ == '__main__':
     app.add_routes([
         web.get('/', handle_index_page),
         web.get('/archive/{archive_hash}/', archive),
+        web.post('/archive/save/', save_archive)
     ])
     web.run_app(app)
