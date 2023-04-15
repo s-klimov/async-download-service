@@ -3,7 +3,6 @@ import os
 import os.path
 import signal
 import sys
-from aiohttp import StreamReader
 
 import aiofiles
 import argparse
@@ -94,18 +93,20 @@ async def archive(request: Request) -> web.StreamResponse:
 
 
 async def save_archive(request: Request) -> web.Response:
-    """Хендлер сохранения тела запроса в файл"""
+    """Хендлер сохранения байтового потока из запроса в файл"""
 
     logger.info(request.headers)
 
-    # FIXME исправить код чтения байтов из потока и добавить код сохранения файла
     # https://github.com/aio-libs/aiohttp-demos
-    stream = StreamReader()
+    content = await request.content.read()
 
-    data, last_chunk = stream.readchunk()
-    logger.info(data)
+    async with aiofiles.open('step1.jpg', 'bw') as fh:
+        await fh.write(content)
+        await fh.flush()
 
-    return web.Response()
+    logger.debug('file accepted and write into disk')
+
+    return web.Response(text='file accepted')
 
 
 async def handle_index_page(request):
